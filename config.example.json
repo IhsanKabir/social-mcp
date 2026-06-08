@@ -1,0 +1,41 @@
+{
+  "tokenStore": "encrypted-file",
+  "platforms": {
+    "linkedin": {
+      "clientId": "YOUR_LINKEDIN_CLIENT_ID",
+      "clientSecret": "YOUR_LINKEDIN_CLIENT_SECRET"
+    },
+    "facebook": {
+      "clientId": "YOUR_META_APP_ID",
+      "clientSecret": "YOUR_META_APP_SECRET"
+    },
+    "instagram": {
+      "clientId": "YOUR_META_APP_ID",
+      "clientSecret": "YOUR_META_APP_SECRET"
+    },
+    "threads": {
+      "clientId": "YOUR_THREADS_APP_ID",
+      "clientSecret": "YOUR_THREADS_APP_SECRET"
+    },
+    "youtube": {
+      "clientId": "YOUR_GOOGLE_OAUTH_CLIENT_ID",
+      "clientSecret": "YOUR_GOOGLE_OAUTH_CLIENT_SECRET"
+    },
+    "tiktok": {
+      "clientId": "YOUR_TIKTOK_CLIENT_KEY",
+      "clientSecret": "YOUR_TIKTOK_CLIENT_SECRET"
+    }
+  },
+  "ai": {
+    "anthropicApiKey": "OPTIONAL_only_needed_for_autonomous_daemon_content_generation"
+  },
+  "daemon": {
+    "pollIntervalMs": 15000
+  },
+  "_notes": {
+    "location": "Copy this file to ~/.social-mcp/config.json and fill in real values. Each platform is OPTIONAL — only the ones you configure are loaded.",
+    "tokenStore": "'encrypted-file' (default, AES-256-GCM) or 'keychain' (OS keychain, requires keytar).",
+    "platforms": "Add one entry per platform you set up. For Meta (facebook/instagram/threads) use your Meta App ID as clientId and App Secret as clientSecret. For youtube use your Google OAuth client id/secret.",
+    "credentials": "These are YOUR developer-app credentials. See README for how to register each app. Never commit this file."
+  }
+}
