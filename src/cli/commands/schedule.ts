@@ -1,7 +1,7 @@
 import { getAccount } from '../../services/account-registry.js';
 import { schedulePost } from '../../services/post-service.js';
-import { listPosts, cancelPost } from '../../queue/posts-repo.js';
-import { listJobs, cancelJob } from '../../queue/job-queue.js';
+import { listPosts, cancelPost, getPost, setPostState } from '../../queue/posts-repo.js';
+import { listJobs, cancelJob, retryJob } from '../../queue/job-queue.js';
 import type { Visibility } from '../../adapters/capabilities.js';
 
 export interface ScheduleCmdOptions {
@@ -64,4 +64,33 @@ export function queueCancelCommand(postId: string): void {
     }
   }
   process.stdout.write(`Canceled post ${postId}${canceledJobs ? ` and ${canceledJobs} job(s)` : ''}.\n`);
+}
+
+/** `social-mcp queue dead` — list jobs that exhausted their retries. */
+export function queueDeadCommand(): void {
+  const dead = listJobs({ status: 'dead' });
+  if (dead.length === 0) {
+    process.stdout.write('No dead jobs.\n');
+    return;
+  }
+  for (const j of dead) {
+    process.stdout.write(`${j.id} [${j.type}] attempts=${j.attempts} — ${j.lastError ?? ''}\n`);
+  }
+}
+
+/** `social-mcp queue retry <jobId>` — requeue a dead/failed job (and its post). */
+export function queueRetryCommand(jobId: string): void {
+  const job = retryJob(jobId);
+  if (!job) {
+    process.stdout.write(`Job ${jobId} not found or not retryable (only dead/failed jobs).\n`);
+    return;
+  }
+  const postId = (job.payload as { scheduledPostId?: string }).scheduledPostId;
+  if (postId) {
+    const post = getPost(postId);
+    if (post && (post.state === 'failed' || post.state === 'publishing')) {
+      setPostState(postId, 'queued');
+    }
+  }
+  process.stdout.write(`Requeued job ${jobId}.\n`);
 }

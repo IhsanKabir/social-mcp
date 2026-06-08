@@ -69,8 +69,14 @@ export function registerAccountTools(server: McpServer, ctx: McpContext): void {
     async () =>
       guard(async () => {
         const summaries = await ctx.store.list();
+        const now = Date.now();
         const rows = listAccounts().map((a) => {
           const s = summaries.find((x) => x.accountId === a.id);
+          const expiresAt = s?.expiresAt ?? null;
+          const daysUntilExpiry =
+            expiresAt != null ? Math.round((expiresAt - now) / 86_400_000) : null;
+          const needsReauth =
+            a.status === 'needs_reauth' || !s || (expiresAt != null && expiresAt < now);
           return {
             id: a.id,
             platform: a.platform,
@@ -78,7 +84,9 @@ export function registerAccountTools(server: McpServer, ctx: McpContext): void {
             status: a.status,
             hasToken: Boolean(s),
             scopes: s?.scopes ?? [],
-            expiresAt: s?.expiresAt ? new Date(s.expiresAt).toISOString() : null,
+            expiresAt: expiresAt ? new Date(expiresAt).toISOString() : null,
+            daysUntilExpiry,
+            needsReauth,
           };
         });
         return jsonResult({ accounts: rows });

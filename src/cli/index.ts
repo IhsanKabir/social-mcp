@@ -4,7 +4,13 @@ import { accountsListCommand, accountsRemoveCommand } from './commands/accounts.
 import { authCommand } from './commands/auth.js';
 import { publishCommand } from './commands/publish.js';
 import { setupCommand } from './commands/setup.js';
-import { scheduleCommand, queueListCommand, queueCancelCommand } from './commands/schedule.js';
+import {
+  scheduleCommand,
+  queueListCommand,
+  queueCancelCommand,
+  queueDeadCommand,
+  queueRetryCommand,
+} from './commands/schedule.js';
 import {
   daemonStartCommand,
   daemonStatusCommand,
@@ -69,6 +75,14 @@ export function buildProgram(): Command {
     .command('cancel <postId>')
     .description('Cancel a scheduled post')
     .action((postId: string) => queueCancelCommand(postId));
+  queue
+    .command('dead')
+    .description('List jobs that exhausted their retries')
+    .action(() => queueDeadCommand());
+  queue
+    .command('retry <jobId>')
+    .description('Requeue a dead/failed job')
+    .action((jobId: string) => queueRetryCommand(jobId));
 
   const daemon = program.command('daemon').description('Control the autonomous scheduler daemon');
   daemon

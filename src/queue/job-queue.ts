@@ -130,6 +130,19 @@ export function markFailed(id: string, error: string): Job {
   return getJob(id)!;
 }
 
+/** Requeue a dead/failed job for another attempt (resets attempts + backoff). */
+export function retryJob(id: string): Job | null {
+  const now = Date.now();
+  const res = getDb()
+    .prepare(
+      `UPDATE jobs SET status='queued', run_at=?, attempts=0, claimed_by=NULL, claimed_at=NULL,
+         next_backoff_ms=NULL, last_error=NULL, updated_at=?
+       WHERE id=? AND status IN ('dead','failed')`,
+    )
+    .run(now, now, id);
+  return Number(res.changes) > 0 ? getJob(id) : null;
+}
+
 /** Cancel a job that hasn't completed. Returns true if it was cancellable. */
 export function cancelJob(id: string): boolean {
   const res = getDb()
