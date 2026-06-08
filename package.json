@@ -17,7 +17,7 @@
     "claude"
   ],
   "engines": {
-    "node": ">=22"
+    "node": ">=24"
   },
   "bin": {
     "social-mcp": "dist/bin/cli.js",

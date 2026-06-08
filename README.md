@@ -47,7 +47,8 @@ can't do, and degrades gracefully (e.g. "LinkedIn has no comment API") instead o
 
 ## Requirements
 
-- **Node.js ≥ 22** (uses the built-in `node:sqlite` — zero native build steps).
+- **Node.js ≥ 24** (uses the built-in `node:sqlite` — zero native build steps; it's flag-free
+  from Node 24).
 - Your own developer app per platform you want (each platform is optional). See
   [docs/SETUP.md](docs/SETUP.md).
 
@@ -100,7 +101,9 @@ tomorrow 9am"* — it calls `generate_post` → `schedule_post`, and the daemon 
 | `publish <id> --text "…"` | Publish now |
 | `schedule <id> --text "…" [--at <ISO>]` | Queue a post |
 | `queue list` / `queue cancel <postId>` | Inspect/cancel the queue |
+| `queue dead` / `queue retry <jobId>` | Inspect/retry failed (dead-letter) jobs |
 | `daemon start` / `status` / `stop` | Control the scheduler |
+| `dashboard` | Serve the local web dashboard (default http://localhost:8766) |
 | `doctor` | Diagnostics |
 
 ## MCP tools
