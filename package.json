@@ -22,7 +22,8 @@
   "bin": {
     "social-mcp": "dist/bin/cli.js",
     "social-mcp-server": "dist/bin/mcp-server.js",
-    "social-mcp-daemon": "dist/bin/daemon.js"
+    "social-mcp-daemon": "dist/bin/daemon.js",
+    "social-mcp-dashboard": "dist/bin/dashboard.js"
   },
   "files": [
     "dist",

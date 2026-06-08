@@ -38,6 +38,11 @@ export const configSchema = z
         pollIntervalMs: z.number().int().positive().default(15000),
       })
       .default({}),
+    web: z
+      .object({
+        port: z.number().int().positive().default(8766),
+      })
+      .default({}),
   })
   .strict();
 

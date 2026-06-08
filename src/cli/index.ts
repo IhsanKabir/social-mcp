@@ -16,6 +16,7 @@ import {
   daemonStatusCommand,
   daemonStopCommand,
 } from './commands/daemon.js';
+import { dashboardCommand } from './commands/dashboard.js';
 
 export function buildProgram(): Command {
   const program = new Command();
@@ -97,6 +98,11 @@ export function buildProgram(): Command {
     .command('stop')
     .description('Stop a running daemon')
     .action(() => daemonStopCommand());
+
+  program
+    .command('dashboard')
+    .description('Serve the local web dashboard (queue, mentions, accounts, insights)')
+    .action(() => dashboardCommand());
 
   const accounts = program.command('accounts').description('Manage connected accounts');
   accounts
