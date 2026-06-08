@@ -11,7 +11,8 @@ import { capabilitiesFor } from '../capabilities.js';
 import type { StoredToken } from '../../auth/token-store.js';
 import type { OAuthProfile } from '../../auth/profiles/types.js';
 import { graphGet } from '../meta/graph.js';
-import { publishThread, THREADS_GRAPH_ROOT } from './publish.js';
+import { isVideoAsset } from '../media-util.js';
+import { publishThread, publishThreadCarousel, THREADS_GRAPH_ROOT } from './publish.js';
 import { getThreadReplies, replyThread } from './engagement.js';
 import { getThreadsInsights } from './insights.js';
 
@@ -34,13 +35,27 @@ export class ThreadsAdapter implements SocialAdapter {
   }
 
   async publish(req: PublishRequest, auth: AuthContext): Promise<PublishResult> {
-    const imageUrl = req.media?.find((m) => m.url)?.url;
-    if (!req.text && !imageUrl) throw new Error('A Threads post requires text or an image URL.');
+    const userId = this.userId(auth);
+    const accessToken = auth.accessToken;
+    const items = (req.media ?? []).filter((m) => m.url);
+
+    if (items.length > 1) {
+      return publishThreadCarousel({
+        userId,
+        accessToken,
+        items: items.map((m) => ({ url: m.url as string, isVideo: isVideoAsset(m) })),
+        text: req.text,
+      });
+    }
+
+    const only = items[0];
+    if (!req.text && !only) throw new Error('A Threads post requires text or media.');
     return publishThread({
-      userId: this.userId(auth),
-      accessToken: auth.accessToken,
+      userId,
+      accessToken,
       text: req.text,
-      imageUrl,
+      imageUrl: only && !isVideoAsset(only) ? (only.url as string) : undefined,
+      videoUrl: only && isVideoAsset(only) ? (only.url as string) : undefined,
     });
   }
 

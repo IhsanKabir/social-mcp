@@ -12,7 +12,12 @@ import { CapabilityError } from '../capability-error.js';
 import type { StoredToken } from '../../auth/token-store.js';
 import type { OAuthProfile } from '../../auth/profiles/types.js';
 import { exchangeLongLivedToken } from '../meta/graph.js';
-import { publishInstagramImage } from './container.js';
+import { isVideoAsset } from '../media-util.js';
+import {
+  publishInstagramImage,
+  publishInstagramReel,
+  publishInstagramCarousel,
+} from './container.js';
 import { getInstagramComments, replyInstagram } from './engagement.js';
 import { getInstagramInsights } from './insights.js';
 
@@ -35,20 +40,31 @@ export class InstagramAdapter implements SocialAdapter {
   }
 
   async publish(req: PublishRequest, auth: AuthContext): Promise<PublishResult> {
-    const imageUrl = req.media?.find((m) => m.url)?.url;
-    if (!imageUrl) {
+    const items = (req.media ?? []).filter((m) => m.url);
+    if (items.length === 0) {
       throw new CapabilityError(
         'instagram',
         'text-only or binary publishing',
-        'Instagram requires a public image URL (provide imageUrls). Video/carousel coming later.',
+        'Instagram requires at least one public media URL (provide imageUrls).',
       );
     }
-    return publishInstagramImage({
-      igUserId: this.igUserId(auth),
-      accessToken: auth.accessToken,
-      imageUrl,
-      caption: req.text,
-    });
+    const igUserId = this.igUserId(auth);
+    const accessToken = auth.accessToken;
+
+    if (items.length > 1) {
+      return publishInstagramCarousel({
+        igUserId,
+        accessToken,
+        items: items.map((m) => ({ url: m.url as string, isVideo: isVideoAsset(m) })),
+        caption: req.text,
+      });
+    }
+
+    const only = items[0]!;
+    if (isVideoAsset(only)) {
+      return publishInstagramReel({ igUserId, accessToken, videoUrl: only.url as string, caption: req.text });
+    }
+    return publishInstagramImage({ igUserId, accessToken, imageUrl: only.url as string, caption: req.text });
   }
 
   async getComments(remoteId: string, auth: AuthContext): Promise<Comment[]> {
