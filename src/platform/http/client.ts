@@ -5,7 +5,7 @@ export interface RequestOptions {
   method?: string;
   headers?: Record<string, string>;
   /** Raw body (string/bytes) or use `json` for a value to be JSON-encoded. */
-  body?: string | Uint8Array | null;
+  body?: string | Uint8Array | FormData | null;
   json?: unknown;
   /** Max retry attempts for retryable failures (429/5xx/network). Default 3. */
   retries?: number;

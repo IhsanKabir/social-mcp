@@ -4,7 +4,7 @@ import type { McpContext } from '../context.js';
 import { jsonResult, errorResult, guard } from '../result.js';
 import { listAccounts } from '../../services/account-registry.js';
 import { capabilitiesFor } from '../../adapters/capabilities.js';
-import { isPlatformId } from '../../platform/ids.js';
+import { PLATFORMS, isPlatformId } from '../../platform/ids.js';
 
 export function registerAccountTools(server: McpServer, ctx: McpContext): void {
   server.registerTool(
@@ -52,7 +52,7 @@ export function registerAccountTools(server: McpServer, ctx: McpContext): void {
         }
         if (!p || !isPlatformId(p)) {
           return errorResult(
-            'Provide a valid platform (linkedin, facebook, instagram, threads, youtube) or a known accountId.',
+            `Provide a valid platform (${PLATFORMS.join(', ')}) or a known accountId.`,
           );
         }
         return jsonResult(capabilitiesFor(p));

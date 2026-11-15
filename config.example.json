@@ -24,6 +24,10 @@
     "tiktok": {
       "clientId": "YOUR_TIKTOK_CLIENT_KEY",
       "clientSecret": "YOUR_TIKTOK_CLIENT_SECRET"
+    },
+    "x": {
+      "clientId": "YOUR_X_OAUTH2_CLIENT_ID",
+      "clientSecret": "YOUR_X_OAUTH2_CLIENT_SECRET"
     }
   },
   "ai": {

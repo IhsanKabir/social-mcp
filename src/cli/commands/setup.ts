@@ -13,7 +13,8 @@ const PLATFORM_LABELS: Record<PlatformId, string> = {
   instagram: 'Instagram (Meta app)',
   threads: 'Threads (Threads app)',
   youtube: 'YouTube (Google Cloud project)',
-  tiktok: 'TikTok (draft-only — public posting needs app audit)',
+  tiktok: 'TikTok (draft-only by default; direct post if app is audited)',
+  x: 'X / Twitter (OAuth 2.0 PKCE)',
 };
 
 const REDIRECT_HINT = (config: AppConfig) => `${config.oauth.redirectBaseUrl}/callback`;

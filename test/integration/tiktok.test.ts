@@ -149,3 +149,77 @@ describe('TikTok degraded adapter', () => {
     expect(id.meta.openId).toBe('OPEN1');
   });
 });
+
+describe('TikTok direct publish, error checking, and insights', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('supports direct publish mode with post_info when video.publish scope is granted', async () => {
+    let seenUrl = '';
+    let seenBody: any = null;
+    vi.stubGlobal('fetch', async (url: unknown, init?: RequestInit) => {
+      seenUrl = String(url);
+      seenBody = JSON.parse(String(init?.body ?? '{}'));
+      return new Response(
+        JSON.stringify({ data: { publish_id: 'pub_direct_1' }, error: { code: 'ok', message: '' } }),
+        { status: 200, headers: new Headers({ 'content-type': 'application/json' }) },
+      );
+    });
+
+    const a = new TikTokAdapter();
+    const res = await a.publish(
+      {
+        accountId: 'acc1',
+        text: 'Launch video!',
+        visibility: 'public',
+        media: [{ url: 'https://cdn.example.com/v.mp4' }],
+        idempotencyKey: 'k1',
+      },
+      {
+        accessToken: 'TOK',
+        meta: { openId: 'o1', scopes: 'user.info.basic,video.upload,video.publish' },
+      },
+    );
+
+    expect(seenUrl).toContain('/post/publish/video/init/');
+    expect(seenBody.post_info.title).toBe('Launch video!');
+    expect(seenBody.post_info.privacy_level).toBe('PUBLIC_TO_EVERYONE');
+    expect(res.state).toBe('processing');
+    expect(res.remoteId).toBe('pub_direct_1');
+  });
+
+  it('throws on TikTok non-ok error payload', async () => {
+    vi.stubGlobal(
+      'fetch',
+      async () =>
+        new Response(
+          JSON.stringify({ error: { code: 'unaudited_client_can_only_post_to_private_accounts', message: 'Audit needed' } }),
+          { status: 200, headers: new Headers({ 'content-type': 'application/json' }) },
+        ),
+    );
+    await expect(
+      uploadTikTokDraft({ accessToken: 'T', videoUrl: 'https://cdn/x.mp4', mode: 'direct' }),
+    ).rejects.toThrow(/unaudited_client_can_only_post_to_private_accounts/);
+  });
+
+  it('fetches account insights when user.info.stats scope is granted', async () => {
+    vi.stubGlobal(
+      'fetch',
+      async () =>
+        new Response(
+          JSON.stringify({
+            data: { user: { follower_count: 50, following_count: 10, likes_count: 200, video_count: 4 } },
+            error: { code: 'ok' },
+          }),
+          { status: 200, headers: new Headers({ 'content-type': 'application/json' }) },
+        ),
+    );
+    const a = new TikTokAdapter();
+    const ins = await a.getInsights(null, {
+      accessToken: 'TOK',
+      meta: { openId: 'o1', scopes: 'user.info.basic,user.info.stats' },
+    });
+    expect(ins.metrics).toEqual({ followers: 50, following: 10, likes: 200, videos: 4 });
+  });
+});

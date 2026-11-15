@@ -8,6 +8,7 @@ import { facebookProfile, instagramProfile } from './profiles/meta.js';
 import { threadsProfile, THREADS_GRAPH_BASE } from './profiles/threads.js';
 import { googleProfile, YOUTUBE_API_BASE } from './profiles/google.js';
 import { tiktokProfile, TIKTOK_USERINFO_URL } from './profiles/tiktok.js';
+import { xProfile, X_API_BASE } from './profiles/x.js';
 
 /** Who the freshly-authorized token belongs to, plus any override of the token to store. */
 export interface AccountIdentity {
@@ -173,16 +174,51 @@ export function registerBuiltinAuthProviders(): void {
   registerAuthProvider('tiktok', {
     profile: tiktokProfile,
     async resolveIdentity(outcome, creds): Promise<AccountIdentity> {
-      const info = await requestJson<{ data?: { user?: { open_id?: string; display_name?: string } } }>(
+      const info = await requestJson<{
+        data?: { user?: { open_id?: string; display_name?: string } };
+        error?: { code?: string; message?: string };
+      }>(
         `${TIKTOK_USERINFO_URL}?fields=open_id,display_name`,
         { headers: { authorization: `Bearer ${outcome.accessToken}` } },
       );
+      if (info.error?.code && info.error.code !== 'ok') {
+        throw new Error(`TikTok user info failed (${info.error.code}): ${info.error.message || 'unknown'}`);
+      }
       const user = info.data?.user;
-      const openId = user?.open_id ?? 'tiktok-user';
+      const rawOpenId = typeof outcome.raw?.open_id === 'string' ? outcome.raw.open_id : undefined;
+      const openId = user?.open_id ?? rawOpenId ?? 'tiktok-user';
       return {
         remoteId: openId,
         label: user?.display_name ?? openId,
-        meta: { openId, clientId: creds.clientId, clientSecret: creds.clientSecret },
+        meta: {
+          openId,
+          clientId: creds.clientId,
+          clientSecret: creds.clientSecret,
+          scopes: outcome.scopes.join(','),
+        },
+      };
+    },
+  });
+
+  registerAuthProvider('x', {
+    profile: xProfile,
+    async resolveIdentity(outcome, creds): Promise<AccountIdentity> {
+      const info = await requestJson<{
+        data?: { id?: string; name?: string; username?: string };
+      }>(`${X_API_BASE}/users/me?user.fields=id,name,username`, {
+        headers: { authorization: `Bearer ${outcome.accessToken}` },
+      });
+      const user = info.data;
+      if (!user?.id) throw new Error('Could not resolve X user profile.');
+      return {
+        remoteId: user.id,
+        label: user.username ? `@${user.username}` : (user.name ?? user.id),
+        meta: {
+          userId: user.id,
+          username: user.username ?? '',
+          clientId: creds.clientId,
+          clientSecret: creds.clientSecret,
+        },
       };
     },
   });

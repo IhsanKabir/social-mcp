@@ -95,6 +95,55 @@ describe('OAuth authorization-code flow (loopback + PKCE)', () => {
     expect(body.get('code_verifier')).toBeTruthy(); // PKCE was used
   });
 
+  it('sends HTTP Basic auth header when tokenAuthMethod is basic', async () => {
+    let receivedAuth = '';
+    let receivedBody = '';
+    const tokenServer = createServer((req, res) => {
+      receivedAuth = String(req.headers.authorization ?? '');
+      const chunks: Buffer[] = [];
+      req.on('data', (c) => chunks.push(c as Buffer));
+      req.on('end', () => {
+        receivedBody = Buffer.concat(chunks).toString('utf8');
+        res.writeHead(200, { 'content-type': 'application/json' });
+        res.end(JSON.stringify({ access_token: 'x-tok', token_type: 'bearer', expires_in: 7200 }));
+      });
+    });
+    servers.push(tokenServer);
+    const tokenPort = await listenEphemeral(tokenServer);
+
+    const probe = createServer();
+    const loopbackPort = await listenEphemeral(probe);
+    await close(probe);
+
+    const profile: OAuthProfile = {
+      platform: 'x',
+      authorizeUrl: `http://127.0.0.1:${tokenPort}/authorize`,
+      tokenUrl: `http://127.0.0.1:${tokenPort}/token`,
+      scopes: ['tweet.read', 'tweet.write'],
+      usePkce: true,
+      tokenAuthMethod: 'basic',
+    };
+
+    const outcome = await runAuthorizationCodeFlow({
+      profile,
+      creds: { clientId: 'x-cid', clientSecret: 'x-sec' },
+      redirectBaseUrl: `http://127.0.0.1:${loopbackPort}`,
+      open: false,
+      onAuthorizeUrl: (url) => {
+        const state = new URL(url).searchParams.get('state') ?? '';
+        void hitCallbackWithRetry(
+          `http://127.0.0.1:${loopbackPort}/callback?code=xcode&state=${encodeURIComponent(state)}`,
+        );
+      },
+    });
+
+    expect(outcome.accessToken).toBe('x-tok');
+    expect(receivedAuth).toBe(`Basic ${Buffer.from('x-cid:x-sec').toString('base64')}`);
+    const body = new URLSearchParams(receivedBody);
+    expect(body.get('client_secret')).toBeNull();
+    expect(body.get('code_verifier')).toBeTruthy();
+  });
+
   it('rejects a state mismatch (CSRF guard)', async () => {
     const probe = createServer();
     const loopbackPort = await listenEphemeral(probe);

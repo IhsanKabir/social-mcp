@@ -16,12 +16,11 @@ Nothing is sent to any third-party service.
 | **Instagram** | image² | emulated¹ | ✓ | ✓ | ✓ |
 | **Threads** | text/image | emulated¹ | ✓ | ✓ | ✓ |
 | **YouTube** | video | native | ✓ | ✓ | ✓ |
-| TikTok | _deferred_³ | | | | |
+| **TikTok** | video (draft/direct³) | emulated¹ | — | — | opt⁴ |
+| **X (Twitter)** | text/image/video | emulated¹ | ✓⁵ | ✓⁵ | ✓ |
 
 ¹ *emulated* = the platform has no scheduling API, so the local daemon holds the post and
-publishes it at the target time. ² Instagram requires a public image URL. ³ TikTok public
-posting is gated behind a per-app manual audit, with no analytics API for normal developers —
-deferred until the core is proven.
+publishes it at the target time. ² Instagram requires a public image URL. ³ TikTok defaults to inbox drafts (`video.upload`); audited apps can enable `video.publish` in `extra.scopes` for direct posts. ⁴ TikTok insights require `user.info.stats` / `video.list` scopes. ⁵ Reading replies and mentions on X requires Basic tier or higher.
 
 ## What it does
 
