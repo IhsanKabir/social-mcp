@@ -5,6 +5,7 @@ import { InstagramAdapter } from './instagram/adapter.js';
 import { ThreadsAdapter } from './threads/adapter.js';
 import { YouTubeAdapter } from './youtube/adapter.js';
 import { TikTokAdapter } from './tiktok/adapter.js';
+import { XAdapter } from './x/adapter.js';
 
 let done = false;
 
@@ -22,4 +23,5 @@ export function registerBuiltinAdapters(): void {
   registerAdapter('threads', () => new ThreadsAdapter());
   registerAdapter('youtube', () => new YouTubeAdapter());
   registerAdapter('tiktok', () => new TikTokAdapter());
+  registerAdapter('x', () => new XAdapter());
 }

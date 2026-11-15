@@ -19,4 +19,6 @@ export interface OAuthProfile {
   extraAuthorizeParams?: Record<string, string>;
   /** OAuth client-id parameter name. Defaults to 'client_id'; TikTok uses 'client_key'. */
   clientIdParam?: string;
+  /** How client credentials are sent to the token endpoint. X requires HTTP Basic auth for confidential clients. */
+  tokenAuthMethod?: 'body' | 'basic';
 }

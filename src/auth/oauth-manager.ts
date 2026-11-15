@@ -126,22 +126,38 @@ async function exchangeCode(
   code: string,
   verifier?: string,
 ): Promise<TokenResponse> {
+  const useBasic = profile.tokenAuthMethod === 'basic';
   const body = new URLSearchParams({
     grant_type: 'authorization_code',
     code,
     redirect_uri: redirectUri,
-    [profile.clientIdParam ?? 'client_id']: creds.clientId,
-    client_secret: creds.clientSecret,
   });
+  if (!useBasic) {
+    body.set(profile.clientIdParam ?? 'client_id', creds.clientId);
+    body.set('client_secret', creds.clientSecret);
+  } else {
+    body.set(profile.clientIdParam ?? 'client_id', creds.clientId);
+  }
   if (verifier) body.set('code_verifier', verifier);
+
+  const headers: Record<string, string> = {
+    'content-type': 'application/x-www-form-urlencoded',
+    accept: 'application/json',
+  };
+  if (useBasic) {
+    headers.authorization = `Basic ${Buffer.from(`${creds.clientId}:${creds.clientSecret}`).toString('base64')}`;
+  }
 
   const res = await request(profile.tokenUrl, {
     method: 'POST',
-    headers: {
-      'content-type': 'application/x-www-form-urlencoded',
-      accept: 'application/json',
-    },
+    headers,
     body: body.toString(),
   });
-  return (await res.json()) as TokenResponse;
+  const json = (await res.json()) as TokenResponse & { error?: string; error_description?: string };
+  if (json.error || !json.access_token) {
+    throw new Error(
+      `Token exchange failed: ${json.error ?? 'missing access_token'} ${json.error_description ?? ''}`.trim(),
+    );
+  }
+  return json;
 }

@@ -79,11 +79,38 @@ Notes (important caveats):
 
 ---
 
-## TikTok (deferred)
+## TikTok
 
-TikTok's public-posting Content Posting API is gated behind a **manual per-app audit**;
-unaudited apps can only post privately, and there's no analytics API for normal developers.
-It's deferred in v1 — the architecture leaves a clean adapter slot for it.
+1. Go to <https://developers.tiktok.com/> → **Manage apps** → **Create an app**.
+2. Add **Login Kit** and **Content Posting API** (and optionally **Display API** if you want
+   profile/video stats).
+3. Under **Login Kit** redirect URI, add `http://localhost:8765/callback`. Copy the
+   **Client Key** (→ `clientId`) and **Client Secret** (→ `clientSecret`).
+4. `social-mcp auth tiktok`.
+
+Notes:
+- By default, unaudited apps use `video.upload` to send videos as **drafts** to your TikTok
+  inbox (finish posting in the TikTok app).
+- If your app passes TikTok's manual audit for `video.publish` (or you are testing in
+  Sandbox), set `extra.scopes` in `~/.social-mcp/config.json` (e.g.
+  `"user.info.basic,video.upload,video.publish"`) and re-run `social-mcp auth tiktok`.
+
+---
+
+## X (Twitter)
+
+1. Go to <https://developer.x.com/en/portal/dashboard> → create a Project + App.
+2. Under **User authentication settings** → enable **OAuth 2.0**:
+   - **Type of App**: Web App, Automated App or Bot (**Confidential client**).
+   - **App permissions**: **Read and write**.
+   - **Callback URI / Redirect URL**: `http://localhost:8765/callback`.
+3. Copy the OAuth 2.0 **Client ID** and **Client Secret** (not the API Key / Consumer Key).
+4. `social-mcp auth x`.
+
+Notes:
+- Uses OAuth 2.0 PKCE + `offline.access` (tokens refresh automatically via the daemon).
+- **Free tier** allows posting (~17 tweets/24h, 500/month). Reading replies, mentions, and
+  private metrics requires **Basic tier** or higher.
 
 ---
 

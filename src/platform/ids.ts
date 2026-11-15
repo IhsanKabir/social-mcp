@@ -1,6 +1,5 @@
 /**
  * Canonical list of platforms the system knows about.
- * TikTok is present in the type space but deferred for v1 (see plan: gated posting).
  */
 export const PLATFORMS = [
   'linkedin',
@@ -9,6 +8,7 @@ export const PLATFORMS = [
   'threads',
   'youtube',
   'tiktok',
+  'x',
 ] as const;
 
 export type PlatformId = (typeof PLATFORMS)[number];

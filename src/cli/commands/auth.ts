@@ -36,8 +36,11 @@ export async function authCommand(platform: string, opts: AuthOptions = {}): Pro
     `Authorizing ${platform}. Make sure "${redirectUri}" is registered as a redirect URL in your ${platform} developer app.\n`,
   );
 
+  const customScopes = creds.extra?.scopes?.split(/[,\s]+/).filter(Boolean);
+  const profile = customScopes?.length ? { ...provider.profile, scopes: customScopes } : provider.profile;
+
   const outcome = await runAuthorizationCodeFlow({
-    profile: provider.profile,
+    profile,
     creds,
     redirectBaseUrl: config.oauth.redirectBaseUrl,
     open: !opts.noBrowser,

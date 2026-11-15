@@ -23,7 +23,8 @@ export type RefreshStrategy =
   | 'google_refresh'
   | 'meta_longlived'
   | 'linkedin_reauth'
-  | 'tiktok_refresh';
+  | 'tiktok_refresh'
+  | 'x_refresh';
 
 export interface PlatformCapabilities {
   platform: PlatformId;
@@ -184,7 +185,26 @@ export const CAPABILITIES: Record<PlatformId, PlatformCapabilities> = {
       setupNote:
         'DRAFT-ONLY via API: uploads a video to your TikTok inbox (video.upload); finish posting in the TikTok app. Public direct-post needs a manual TikTok app audit (video.publish). No engagement/analytics API for normal developers.',
     },
-    rate: { note: 'Unaudited: draft uploads only; ~5 users / 24h' },
+    rate: { note: 'Unaudited: draft uploads only; ~5 users / 24h (add video.publish in extra.scopes for audited direct post)' },
+  },
+
+  x: {
+    platform: 'x',
+    displayName: 'X (Twitter)',
+    publish: {
+      media: ['text', 'image', 'video'],
+      scheduling: 'emulated',
+      twoStep: false,
+      maxTextLength: 280,
+    },
+    engagement: { readComments: true, readMentions: true, reply: true, moderate: false },
+    analytics: { postInsights: true, accountInsights: true },
+    auth: {
+      refreshStrategy: 'x_refresh',
+      setupNote:
+        'Requires an X Developer App with OAuth 2.0 User Context (PKCE) and Read + Write permissions. Free tier supports posting (~17/24h, 500/month); reading replies/mentions requires Basic tier or higher.',
+    },
+    rate: { note: 'Free tier: ~17 posts/24h (500/month); Basic+ for reads/mentions', perDay: 17 },
   },
 };
 
